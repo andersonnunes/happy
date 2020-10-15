@@ -1,13 +1,29 @@
-import React from "react";
-import { FiPlus } from "react-icons/fi";
+import React, { useEffect, useState } from "react";
+import { FiArrowRight, FiPlus } from "react-icons/fi";
 import { Link } from "react-router-dom";
-import { Map, TileLayer } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
+import { Map, Marker, Popup, TileLayer } from "react-leaflet";
 
 import mapMarkerImg from "../images/map-marker.svg";
 import "../styles/pages/orpahanages-map.css";
+import mapIcon from "../utils/mapIcon";
+import api from "../services/api";
+
+type Orphanage = {
+  id: number;
+  name: string;
+  latitude: number;
+  longitude: number;
+};
 
 function OrphanagesMap() {
+  const [orphanages, setOrphanages] = useState<Orphanage[]>([]);
+
+  useEffect(() => {
+    api.get("orphanages").then((response) => {
+      setOrphanages(response.data);
+    });
+  }, []);
+
   return (
     <div id="page-map">
       <aside>
@@ -23,7 +39,7 @@ function OrphanagesMap() {
           <span>São Paulo</span>
         </footer>
 
-        <Link to="" className="create-orphanage">
+        <Link to="/orphanages/create" className="create-orphanage">
           <FiPlus size={32} color="#fff" />
         </Link>
       </aside>
@@ -39,6 +55,26 @@ function OrphanagesMap() {
         <TileLayer
           url={`https://api.mapbox.com/styles/v1/mapbox/streets-v10/tiles/256/{z}/{x}/{y}@2x?access_token=${process.env.REACT_APP_MAPBOX_TOKEN}`}
         />
+
+        {orphanages.map((orphanage) => (
+          <Marker
+            key={orphanage.id}
+            icon={mapIcon}
+            position={[orphanage.latitude, orphanage.longitude]}
+          >
+            <Popup
+              closeButton={false}
+              minWidth={240}
+              maxWidth={240}
+              className="map-popup"
+            >
+              {orphanage.name}
+              <Link to={`/orphanages/${orphanage.id}`}>
+                <FiArrowRight size={20} color="#FFF" />
+              </Link>
+            </Popup>
+          </Marker>
+        ))}
       </Map>
     </div>
   );
